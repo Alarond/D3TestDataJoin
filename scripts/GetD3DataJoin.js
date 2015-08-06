@@ -9,9 +9,28 @@ var svg = d3.select("Body")
     .append("svg")
     .attr({ width: w, height: h });
 
-//Function called to do initial SVG Load of data
-function loadSVG() {
-    //Load in GeoJSON data
+//On load we will load the initial SVG elements
+
+function LoadSVG() {
+
+    //First we will generate the Rows we need
+    AddCustomerRows();
+
+    //Then we will load the Sales data
+    LoadSalesData();
+}
+
+function AddData() {
+
+    //document.getElementById("SellectedYearLb").innerHTML = "Pushed";
+    AddToSVG();
+
+}
+
+//Here are the functions where we gennerate the SVG elements
+
+function AddCustomerRows() {
+
     d3.json("data/zzMonthlySales2.json", function (json) {
 
         g = svg.append('g').classed("chart", true)
@@ -22,30 +41,22 @@ function loadSVG() {
           .append("g")
           .classed("csMove", true)
           .attr("transform", function (d, i) { return "translate(0, " + i * 100 + ")"; })
-          .append("g")
-          .classed("CustomerBox", true);
 
-        //Create silver rows 
+          //Here we will try to set the Data-Name Element
+          .attr("id", function (d) { return d.CompanyName; })
+
+          //Replaced the Classed Group below with this attribute so I can reference each Customer
+          //.attr('class', function (d) {
+              //return d.CompanyName
+          //})
+          .append("g");
+        //.classed("CustomerBox", true);
+
+        //Now lets generate a silver background for each row 
         g.append("rect")
           .attr("width", w)
           .attr("height", function (d) { return h / 2; })
            .style("fill", "silver");
-
-        var SalesDot = svg.selectAll(".CustomerBox").selectAll(".Sdot")
-        .data(function (d) { return d.monthlySales })
-        .enter()
-        .append("g")
-        .classed("Sdot", true);
-
-        //then we add the circles in the correct company group
-        SalesDot
-           .append("circle")
-           .attr("cx", function (d) { return ((d.month - 20130001) / 2); })
-           .attr("cy", function (d) { return d.sales })
-           .attr("r", 5)
-           .style("fill", "red");
-
-        //Test - add dots initially
 
     });
 
@@ -53,23 +64,18 @@ function loadSVG() {
 
 function AddToSVG() {
 
-    //Load in GeoJSON data
-    d3.json("data/zzMonthlyBuys2.json", function (json2) {
+    //Load in a new Json file
+    d3.json("data/zzMonthlyBuys2.json", function (json) {
 
-        //add Green Circles.
-        var BuysDot = svg.selectAll(".CustomerBox").selectAll(".Bdot")
-        .data(json2)
-        .enter()
-        .append("g")
-        .classed("Bdot", true);
+        json.forEach(function (company) {
+            svg.select('#' + company.CompanyName).selectAll(".Bdot")
+                .data(company.monthlyBuys)
+                .enter()
+                .append("g")
+                .classed("Bdot", true);
+        });
 
-        //then we add the circles in the correct company group
-        BuysDot
-           .data(function (d) {
-               return d.monthlyBuys;
-               //return d.monthlySales  //If You run the sales data which should not happen
-           })
-           .enter()
+        svg.selectAll(".Bdot")
            .append("circle")
            .attr("cx", function (d) {
                return ((d.monthBuys - 20130001) / 2);
@@ -82,7 +88,29 @@ function AddToSVG() {
 
 }
 
-function AddData() {
-    AddToSVG();
-}
+function LoadSalesData() {
 
+    d3.json("data/zzMonthlySales2.json", function (json) {
+
+        json.forEach(function (company) {
+            svg.select('#' + company.CompanyName).selectAll(".Sdot")
+            //svg.select("cvMove").attr("data-name", '.' + company.CompanyName).selectAll(".Sdot")
+                .data(company.monthlySales)
+                .enter()
+                .append("g")
+                .classed("Sdot", true);
+        });
+
+        svg.selectAll(".Sdot")
+           .append("circle")
+           .attr("cx", function (d) {
+               return ((d.month - 20130001) / 2);
+           })
+           .attr("cy", function (d) {
+               return d.sales
+           })
+           .attr("r", 5)
+           .style("fill", "red");
+    });
+
+}
